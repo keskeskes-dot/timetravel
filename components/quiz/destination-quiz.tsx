@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { quizQuestions } from "@/lib/quiz";
+import { formatEuros, getDestination } from "@/lib/destinations";
 import { EASE } from "@/lib/motion";
 
 type QuizAnswer = {
@@ -27,6 +28,7 @@ export function DestinationQuiz() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<QuizAnswer | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [shared, setShared] = useState(false);
 
   const total = quizQuestions.length;
   const current = quizQuestions[step];
@@ -73,6 +75,33 @@ export function DestinationQuiz() {
     setResult(null);
     setStatus("idle");
     setErrorMsg("");
+    setShared(false);
+  }
+
+  async function share(current: QuizAnswer) {
+    const url =
+      typeof window !== "undefined"
+        ? new URL(current.href, window.location.origin).toString()
+        : current.href;
+    const shareData = {
+      title: "TimeTravel Agency",
+      text: `Chronos m'a recommandé ${current.name} (${current.era}) comme voyage temporel. Et vous, quelle époque ?`,
+      url,
+    };
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareData.text} ${url}`);
+        setShared(true);
+        window.setTimeout(() => setShared(false), 2500);
+      }
+    } catch {
+      /* partage annulé par l'utilisateur : rien à signaler */
+    }
   }
 
   return (
@@ -194,10 +223,30 @@ export function DestinationQuiz() {
               {result.explanation}
             </p>
 
+            {(() => {
+              const dest = getDestination(result.slug);
+              return dest ? (
+                <p className="mt-4 text-sm text-slate-400">
+                  À partir de{" "}
+                  <span className="font-semibold text-chrono-gold">
+                    {formatEuros(dest.pricing.from)}
+                  </span>{" "}
+                  par personne.
+                </p>
+              ) : null;
+            })()}
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link href={result.href} className="btn-primary">
                 Découvrir {result.name} →
               </Link>
+              <button
+                type="button"
+                onClick={() => void share(result)}
+                className="btn-ghost"
+              >
+                {shared ? "Lien copié ✓" : "Partager mon résultat"}
+              </button>
               <button
                 type="button"
                 onClick={restart}

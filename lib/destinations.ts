@@ -3,6 +3,14 @@ export type Faq = {
   answer: string;
 };
 
+/** Tarifs indicatifs (fictifs mais cohérents) par personne, en euros. */
+export type Pricing = {
+  /** Prix d'entrée, formule Découverte. */
+  from: number;
+  /** Prix de la formule Prestige tout inclus. */
+  premium: number;
+};
+
 export type Destination = {
   slug: string;
   name: string;
@@ -15,6 +23,8 @@ export type Destination = {
   climate: string;
   duration: string;
   difficulty: "Facile" | "Modéré" | "Aventure";
+  /** Tarifs par personne (formules Découverte et Prestige). */
+  pricing: Pricing;
   /** Tailwind gradient classes used as a fallback / overlay behind the image */
   gradient: string;
   /** Emoji used as a lightweight fallback icon */
@@ -44,6 +54,7 @@ export const destinations: Destination[] = [
     climate: "Tempéré, printemps doux",
     duration: "3 jours",
     difficulty: "Facile",
+    pricing: { from: 12900, premium: 18500 },
     gradient: "from-amber-500/30 via-void-800 to-void-950",
     icon: "🗼",
     image: "/images/paris.png",
@@ -65,7 +76,7 @@ export const destinations: Destination[] = [
     name: "Crétacé",
     era: "Ère des dinosaures",
     year: "-100 000 000",
-    tagline: "Une expédition au temps des derniers grands dinosaures",
+    tagline: "Une expédition au temps des grands dinosaures",
     shortDescription:
       "Observez les géants du Crétacé et approchez les espèces les plus douces, bébés dinos compris.",
     description:
@@ -81,6 +92,7 @@ export const destinations: Destination[] = [
     climate: "Chaud et humide, tropical",
     duration: "2 jours",
     difficulty: "Aventure",
+    pricing: { from: 24500, premium: 32000 },
     gradient: "from-emerald-500/30 via-void-800 to-void-950",
     icon: "🦖",
     image: "/images/cretace.png",
@@ -116,6 +128,7 @@ export const destinations: Destination[] = [
     climate: "Méditerranéen, printemps ensoleillé",
     duration: "3 jours",
     difficulty: "Modéré",
+    pricing: { from: 15800, premium: 21000 },
     gradient: "from-rose-500/30 via-void-800 to-void-950",
     icon: "🎨",
     image: "/images/florence.png",
@@ -136,4 +149,9 @@ export const destinations: Destination[] = [
 
 export function getDestination(slug: string): Destination | undefined {
   return destinations.find((d) => d.slug === slug);
+}
+
+/** Formate un montant en euros selon la locale française (ex. « 12 900 € »). */
+export function formatEuros(value: number): string {
+  return `${value.toLocaleString("fr-FR")} €`;
 }

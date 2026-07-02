@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { Destination } from "@/lib/destinations";
+import { formatEuros, type Destination } from "@/lib/destinations";
 import { EASE } from "@/lib/motion";
 
 const MotionLink = motion.create(Link);
@@ -47,10 +47,18 @@ export function DestinationCard({ destination }: { destination: Destination }) {
           <span>🌡 {destination.climate}</span>
         </div>
 
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-chrono-gold">
-          Explorer
-          <span className="transition group-hover:translate-x-1">→</span>
-        </span>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-xs text-slate-400">
+            dès{" "}
+            <span className="font-semibold text-white">
+              {formatEuros(destination.pricing.from)}
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-chrono-gold">
+            Explorer
+            <span className="transition group-hover:translate-x-1">→</span>
+          </span>
+        </div>
       </div>
     </MotionLink>
   );

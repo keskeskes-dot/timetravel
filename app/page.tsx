@@ -199,8 +199,8 @@ export default function HomePage() {
         <Reveal className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-chrono-gold/20 via-void-800 to-void-900 p-10 text-center sm:p-16">
           <h2 className="section-title">Prêt à voyager dans le temps ?</h2>
           <p className="mx-auto mt-3 max-w-xl text-slate-300">
-            Réservez votre place à bord et vivez l&apos;Histoire de
-            l&apos;intérieur.
+            Choisissez votre époque et laissez Chronos préparer votre départ. La
+            réservation en ligne arrive très bientôt.
           </p>
           <div className="mt-8">
             <Link href="#destinations" className="btn-primary">

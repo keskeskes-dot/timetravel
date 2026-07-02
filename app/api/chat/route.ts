@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { destinations } from "@/lib/destinations";
+import { destinations, formatEuros } from "@/lib/destinations";
+import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_LENGTH } from "@/lib/chat";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,24 +16,14 @@ type ChatMessage = {
 const MODEL = process.env.MISTRAL_MODEL ?? "mistral-small-latest";
 const MISTRAL_ENDPOINT = "https://api.mistral.ai/v1/chat/completions";
 
-/** Tarifs indicatifs (fictifs mais cohérents) par destination, en euros / personne. */
-const pricing: Record<string, { from: number; premium: number }> = {
-  "paris-1889": { from: 12900, premium: 18500 },
-  cretace: { from: 24500, premium: 32000 },
-  "florence-1504": { from: 15800, premium: 21000 },
-};
-
-function formatEuros(value: number): string {
-  return `${value.toLocaleString("fr-FR")} €`;
-}
+/** Débit autorisé : 20 requêtes par minute et par IP (usage gratuit maîtrisé). */
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 60_000;
 
 function buildSystemPrompt(): string {
   const catalogue = destinations
     .map((d) => {
-      const price = pricing[d.slug];
-      const priceLine = price
-        ? `Tarifs : à partir de ${formatEuros(price.from)} par personne (formule Découverte), jusqu'à ${formatEuros(price.premium)} par personne en formule Prestige tout inclus.`
-        : "Tarifs : sur devis.";
+      const priceLine = `Tarifs : à partir de ${formatEuros(d.pricing.from)} par personne (formule Découverte), jusqu'à ${formatEuros(d.pricing.premium)} par personne en formule Prestige tout inclus.`;
       return [
         `### ${d.name} — ${d.era} (${d.year})`,
         `Accroche : ${d.tagline}`,
@@ -56,7 +48,7 @@ function buildSystemPrompt(): string {
     "",
     "Tu connais parfaitement :",
     "- Paris 1889 (Belle Époque, Tour Eiffel, Exposition Universelle)",
-    "- Crétacé -65M (dinosaures, nature préhistorique)",
+    "- Crétacé -100M (dinosaures, nature préhistorique)",
     "- Florence 1504 (Renaissance, art, Michel-Ange)",
     "",
     "Tu dois pouvoir répondre à :",
@@ -86,6 +78,21 @@ function buildSystemPrompt(): string {
 }
 
 export async function POST(request: Request) {
+  const limit = rateLimit(
+    `chat:${getClientIp(request)}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS,
+  );
+  if (!limit.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Vous envoyez des messages trop rapidement. Patientez un instant avant de réessayer.",
+      },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -101,21 +108,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
 
-  const history = (Array.isArray(body.messages) ? body.messages : [])
+  const cleaned = (Array.isArray(body.messages) ? body.messages : [])
     .filter(
       (m) => typeof m?.content === "string" && m.content.trim().length > 0,
     )
     .map((m) => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content,
+      role: (m.role === "assistant" ? "assistant" : "user") as ChatRole,
+      content: m.content.slice(0, MAX_MESSAGE_LENGTH),
     }));
 
-  if (history.length === 0) {
+  if (cleaned.length === 0) {
     return NextResponse.json(
       { error: "Aucun message à traiter." },
       { status: 400 },
     );
   }
+
+  // On ne transmet au modèle que les messages les plus récents (tokens bornés).
+  const history = cleaned.slice(-MAX_HISTORY_MESSAGES);
 
   try {
     const mistralResponse = await fetch(MISTRAL_ENDPOINT, {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_LENGTH } from "@/lib/chat";
 
 type Message = {
   role: "assistant" | "user";
@@ -140,6 +141,17 @@ export function ChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, open, loading]);
 
+  function resetConversation() {
+    setMessages(initialMessages);
+    setInput("");
+    setLoading(false);
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Stockage indisponible : rien à nettoyer.
+    }
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = input.trim();
@@ -147,7 +159,7 @@ export function ChatWidget() {
 
     const nextMessages: Message[] = [
       ...messages,
-      { role: "user", content: trimmed },
+      { role: "user", content: trimmed.slice(0, MAX_MESSAGE_LENGTH) },
     ];
     setMessages(nextMessages);
     setInput("");
@@ -157,7 +169,10 @@ export function ChatWidget() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        // On n'envoie que les messages récents pour borner les tokens.
+        body: JSON.stringify({
+          messages: nextMessages.slice(-MAX_HISTORY_MESSAGES),
+        }),
       });
 
       const data = await res.json();
@@ -203,15 +218,31 @@ export function ChatWidget() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-chrono-gold/20 text-lg">
               🧭
             </span>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold text-white">Chronos</p>
               <p className="text-xs text-chrono-teal">
                 Conseiller TimeTravel · en ligne
               </p>
             </div>
+            <button
+              type="button"
+              onClick={resetConversation}
+              disabled={loading || messages.length <= 1}
+              className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 transition hover:border-chrono-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              title="Réinitialiser la conversation"
+            >
+              Réinitialiser
+            </button>
           </div>
 
-          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+          <div
+            ref={scrollRef}
+            role="log"
+            aria-live="polite"
+            aria-atomic="false"
+            aria-label="Conversation avec Chronos"
+            className="flex-1 space-y-3 overflow-y-auto p-4"
+          >
             {messages.map((m, i) => (
               <div
                 key={i}
@@ -251,6 +282,7 @@ export function ChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Votre message..."
               disabled={loading}
+              maxLength={MAX_MESSAGE_LENGTH}
               className="flex-1 rounded-full border border-white/10 bg-void-950 px-4 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-chrono-gold/50 disabled:opacity-60"
             />
             <button

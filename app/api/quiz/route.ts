@@ -5,12 +5,17 @@ import {
   summarizeAnswers,
 } from "@/lib/quiz";
 import type { Destination } from "@/lib/destinations";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = process.env.MISTRAL_MODEL ?? "mistral-small-latest";
 const MISTRAL_ENDPOINT = "https://api.mistral.ai/v1/chat/completions";
+
+/** Débit autorisé : 15 requêtes par minute et par IP (usage gratuit maîtrisé). */
+const RATE_LIMIT = 15;
+const RATE_WINDOW_MS = 60_000;
 
 function buildQuizPrompt(
   destination: Destination,
@@ -54,6 +59,21 @@ function fallbackExplanation(
 }
 
 export async function POST(request: Request) {
+  const limit = rateLimit(
+    `quiz:${getClientIp(request)}`,
+    RATE_LIMIT,
+    RATE_WINDOW_MS,
+  );
+  if (!limit.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Trop de tentatives en peu de temps. Patientez un instant avant de relancer le quiz.",
+      },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   let body: { answers?: Record<string, string> };
   try {
     body = await request.json();

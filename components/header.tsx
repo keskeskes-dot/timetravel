@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navLinks = [
   { label: "Accueil", href: "/#top" },
   { label: "Destinations", href: "/#destinations" },
+  { label: "Comparateur", href: "/comparateur" },
   { label: "Quiz", href: "/quiz" },
   { label: "L'agence", href: "/#agence" },
   { label: "FAQ", href: "/#faq" },
@@ -15,6 +17,20 @@ const navLinks = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  /**
+   * Un lien est « actif » quand on est sur sa page dédiée. Les liens vers des
+   * ancres de l'accueil (/#...) ne marquent que « Accueil » lorsqu'on est sur /,
+   * pour éviter de surligner plusieurs entrées à la fois.
+   */
+  function isActive(href: string): boolean {
+    const path = href.split("#")[0] || "/";
+    if (path === "/") {
+      return pathname === "/" && href === "/#top";
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -47,16 +63,24 @@ export function Header() {
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="text-sm text-slate-300 transition hover:text-white"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`text-sm transition ${
+                    active
+                      ? "font-semibold text-chrono-gold"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="hidden md:block">
@@ -85,17 +109,25 @@ export function Header() {
       {open && (
         <div className="border-t border-white/10 bg-void-950/95 backdrop-blur md:hidden">
           <ul className="container-tt flex flex-col gap-1 py-4">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="block rounded-lg px-3 py-3 text-base text-slate-200 hover:bg-white/5"
-                  onClick={() => setOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`block rounded-lg px-3 py-3 text-base hover:bg-white/5 ${
+                      active
+                        ? "font-semibold text-chrono-gold"
+                        : "text-slate-200"
+                    }`}
+                    onClick={() => setOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
             <li className="mt-2">
               <button
                 type="button"

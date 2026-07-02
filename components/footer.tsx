@@ -62,23 +62,54 @@ export function Footer() {
                 Toutes les destinations
               </Link>
             </li>
+            <li>
+              <Link
+                href="/comparateur"
+                className="transition hover:text-white"
+              >
+                Comparateur
+              </Link>
+            </li>
+            <li>
+              <Link href="/quiz" className="transition hover:text-white">
+                Quiz
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div>
           <h3 className="text-sm font-semibold text-white">Légal</h3>
           <ul className="mt-3 space-y-2 text-sm text-slate-400">
-            <li>Mentions légales</li>
-            <li>Politique temporelle</li>
-            <li>CGV du voyage</li>
+            <li>
+              <Link
+                href="/mentions-legales"
+                className="transition hover:text-white"
+              >
+                Mentions légales
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/politique-temporelle"
+                className="transition hover:text-white"
+              >
+                Politique temporelle
+              </Link>
+            </li>
+            <li>
+              <Link href="/cgv" className="transition hover:text-white">
+                CGV du voyage
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10 py-6">
         <p className="container-tt text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} TimeTravel Agency — Projet étudiant. Tous
-          les visuels sont des placeholders.
+          © {new Date().getFullYear()} TimeTravel Agency — Projet étudiant.
+          Destinations fictives, visuels générés par IA.
         </p>
       </div>
     </footer>

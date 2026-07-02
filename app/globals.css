@@ -4,7 +4,8 @@
 
 :root {
   --font-sans: "Segoe UI", system-ui, sans-serif;
-  --font-display: "Georgia", "Times New Roman", serif;
+  /* --font-display est injectée par next/font (Fraunces) sur <html>,
+     avec repli sur les serif ci-dessous via la config Tailwind. */
 }
 
 @layer base {

@@ -23,16 +23,24 @@ avec l'aide d'outils d'IA générative.
 - **Page d'accueil** : hero animé (fond étoilé CSS + image), présentation de l'agence,
   statistiques, galerie, section « comment ça marche » en 3 étapes, bloc agent, FAQ et
   CTA final.
-- **Galerie des destinations** (`/destinations`) : 3 époques en cards interactives.
+- **Galerie des destinations** (`/destinations`) : 3 époques en cards interactives,
+  chacune affichant son **tarif d'entrée**.
 - **Pages de détail** (`/destinations/[slug]`) : temps forts, infos clés (climat, durée,
-  niveau) et FAQ propre à chaque destination.
+  niveau), **tarifs Découverte / Prestige** et FAQ propre à chaque destination.
+- **Comparateur** (`/comparateur`) : tableau comparatif des 3 époques (durée, climat,
+  niveau, tarifs, temps forts) pour choisir d'un coup d'œil.
 - **Chatbot IA « Chronos »** : widget de chat flottant, branché sur l'API Mistral.
-  Le prompt système intègre tout le catalogue et les tarifs pour des réponses
-  cohérentes ; il rend le markdown léger (gras, liens vers les fiches) et **persiste la
-  conversation** via `sessionStorage`.
+  Le prompt système intègre tout le catalogue et les tarifs (source de vérité unique dans
+  `lib/destinations.ts`) pour des réponses cohérentes ; il rend le markdown léger (gras,
+  liens vers les fiches) et **persiste la conversation** via `sessionStorage`.
 - **Quiz de recommandation personnalisée** (`/quiz`) : 4 questions, scoring déterministe
   côté serveur, puis explication personnalisée générée par l'IA. Un **fallback sans IA**
   garantit une recommandation cohérente si la clé API est absente ou l'API indisponible.
+  Le résultat affiche le tarif et peut être **partagé** (Web Share API + copie du lien).
+- **Pages légales** : mentions légales, politique temporelle et CGV (`/mentions-legales`,
+  `/politique-temporelle`, `/cgv`), clairement identifiées comme contenu fictif.
+- **États de navigation** : 404 (`not-found`), error boundary et écran de chargement
+  aux couleurs du site.
 - **Design responsive** mobile-first (grilles 1 → 2 → 3 colonnes).
 
 ## 🤖 Outils IA utilisés (transparence)
@@ -90,17 +98,27 @@ Ouvrir ensuite [http://localhost:3000](http://localhost:3000).
 app/
   layout.tsx                 Layout global (header, footer, chat)
   page.tsx                   Page d'accueil
+  loading.tsx                Écran de chargement global
+  not-found.tsx              Page 404
+  error.tsx                  Error boundary global
   destinations/page.tsx      Galerie
-  destinations/[slug]/       Détail d'une destination
+  destinations/[slug]/       Détail d'une destination (tarifs inclus)
+  comparateur/page.tsx       Tableau comparatif des destinations
   quiz/page.tsx              Quiz de recommandation
+  mentions-legales/          Mentions légales
+  politique-temporelle/      Politique temporelle
+  cgv/                       Conditions générales de vente
   api/chat/route.ts          Endpoint chatbot (Mistral)
   api/quiz/route.ts          Endpoint recommandation quiz (Mistral + fallback)
-components/                  Header, Footer, cards, chat, quiz, FAQ, animations
+components/                  Header, Footer, cards, chat, quiz, FAQ, légal, animations
 lib/
-  destinations.ts            Source de vérité des 3 destinations
+  destinations.ts            Source de vérité : destinations + tarifs (formatEuros)
   quiz.ts                    Questions + algorithme de scoring
 public/images/               Visuels des destinations et logos
-scripts/make-transparent.mjs Détourage du logo (pngjs)
+scripts/
+  make-transparent.mjs       Détourage du logo (pngjs)
+  test-logic.cjs             Tests unitaires de la logique du quiz
+  test-quiz.mjs              Test d'intégration de /api/quiz
 ```
 
 ## 🙏 Crédits

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { destinations, getDestination } from "@/lib/destinations";
+import { destinations, formatEuros, getDestination } from "@/lib/destinations";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { OpenChatButton } from "@/components/open-chat-button";
 import { Reveal } from "@/components/motion/reveal";
@@ -84,6 +84,21 @@ export default function DestinationDetailPage({
             />
           </div>
 
+          {/* Tarifs */}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <PriceBox
+              label="Formule Découverte"
+              value={formatEuros(destination.pricing.from)}
+              note="par personne · l'essentiel du séjour"
+            />
+            <PriceBox
+              label="Formule Prestige"
+              value={formatEuros(destination.pricing.premium)}
+              note="par personne · tout inclus, options guidées"
+              highlight
+            />
+          </div>
+
           {/* Highlights */}
           <Reveal>
             <h2 className="mt-10 font-display text-2xl font-bold text-white">
@@ -142,6 +157,34 @@ function InfoBox({
         {icon} {label}
       </p>
       <p className="mt-1 font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function PriceBox({
+  label,
+  value,
+  note,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  note: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-5 ${
+        highlight
+          ? "border-chrono-gold/40 bg-chrono-gold/5"
+          : "border-white/10 bg-void-950"
+      }`}
+    >
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 font-display text-2xl font-bold text-chrono-gold">
+        {value}
+      </p>
+      <p className="mt-1 text-xs text-slate-400">{note}</p>
     </div>
   );
 }
