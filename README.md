@@ -16,7 +16,7 @@ avec l'aide d'outils d'IA générative.
 - **Framer Motion** (animations d'apparition, hero animé)
 - **Mistral AI API** (`mistral-small-latest`) pour le chatbot et le quiz
 - **pngjs** (script de traitement d'images pour détourer le logo)
-- Cible d'hébergement : **Vercel**
+- Cible d'hébergement : **Netlify**
 
 ## ✨ Features implémentées
 
@@ -62,7 +62,8 @@ npm install
 
 # 2. Configurer les variables d'environnement
 #    Copier l'exemple puis renseigner votre clé Mistral
-cp .env.local.example .env.local
+cp .env.local.example .env.local          # macOS / Linux
+copy .env.local.example .env.local        # Windows (PowerShell / CMD)
 ```
 
 Renseigner ensuite dans `.env.local` :
@@ -83,14 +84,20 @@ npm run dev
 
 Ouvrir ensuite [http://localhost:3000](http://localhost:3000).
 
+> ℹ️ Les scripts `dev`, `build` et `start` chargent `exfat-fs-patch.js` (`node --require`).
+> Ce correctif ne sert que lorsque le projet est stocké sur un volume **exFAT** (où
+> `fs.readlink()` renvoie `EISDIR`) ; il est sans effet sur NTFS, macOS ou Linux.
+
 ### Scripts disponibles
 
-| Commande        | Description                          |
-| --------------- | ------------------------------------ |
-| `npm run dev`   | Serveur de développement             |
-| `npm run build` | Build de production                  |
-| `npm run start` | Sert le build de production          |
-| `npm run lint`  | Linting (ESLint / `eslint-config-next`) |
+| Commande            | Description                                       |
+| ------------------- | ------------------------------------------------- |
+| `npm run dev`       | Serveur de développement                          |
+| `npm run build`     | Build de production                               |
+| `npm run start`     | Sert le build de production                       |
+| `npm run lint`      | Linting (ESLint / `eslint-config-next`)           |
+| `npm run test`      | Tests unitaires de la logique du quiz             |
+| `npm run test:api`  | Test d'intégration de l'endpoint `/api/quiz`      |
 
 ## 🗂️ Structure du projet
 
@@ -117,14 +124,19 @@ lib/
 public/images/               Visuels des destinations et logos
 scripts/
   make-transparent.mjs       Détourage du logo (pngjs)
+  make-favicon.cjs           Génération du favicon
   test-logic.cjs             Tests unitaires de la logique du quiz
   test-quiz.mjs              Test d'intégration de /api/quiz
+next.config.js               Config Next.js + correctif exFAT (webpack)
+next.config.mjs              Config Next.js (reactStrictMode)
+exfat-fs-patch.js            Patch readlink EISDIR -> EINVAL (volumes exFAT)
 ```
 
 ## 🙏 Crédits
 
 - **API IA** : [Mistral AI](https://mistral.ai/) — modèle `mistral-small-latest`.
-- **Framework** : [Next.js](https://nextjs.org/) (Vercel).
+- **Framework** : [Next.js](https://nextjs.org/).
+- **Hébergement** : [Netlify](https://www.netlify.com/).
 - **Styles** : [Tailwind CSS](https://tailwindcss.com/).
 - **Animations** : [Framer Motion](https://www.framer.com/motion/).
 - **Traitement d'images** : [pngjs](https://github.com/pngjs/pngjs).
