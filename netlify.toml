@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Runtime officiel Next.js : convertit le SSR, les routes API et les routes
+# dynamiques de l'App Router en Netlify Functions/Edge Functions.
+# Sans ce plugin, seules les pages statiques sont servies et tout le reste
+# renvoie le "Page not found" de Netlify.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -3,6 +3,7 @@ require("./exfat-fs-patch");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   webpack: (config) => {
     // Ce projet est stocké sur un volume exFAT, où fs.readlink() renvoie EISDIR
     // sur des fichiers normaux. La résolution des symlinks de webpack (activée
